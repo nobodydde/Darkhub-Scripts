@@ -1,4 +1,6 @@
--- Darkhub Main Menu Config
+-- Darkhub UI Library
+-- Load with:  local UI = loadstring(game:HttpGet("<raw github url>/Library.lua"))()
+-- Optional before loading:  getgenv().DarkhubGame = "Arsenal"   (sidebar subtitle)
 local Players, TS, UIS, RS, HS = game:GetService("Players"), game:GetService("TweenService"), game:GetService("UserInputService"), game:GetService("RunService"), game:GetService("HttpService")
 local plr = Players.LocalPlayer
 local old = plr:WaitForChild("PlayerGui"):FindFirstChild("Darkhub")
@@ -7,6 +9,9 @@ local gui = Instance.new("ScreenGui")
 gui.Name, gui.ResetOnSpawn, gui.IgnoreGuiInset, gui.DisplayOrder = "Darkhub", false, true, 50
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.Parent = plr.PlayerGui
+
+local GAME_NAME = "Arsenal"
+pcall(function() if getgenv and getgenv().DarkhubGame then GAME_NAME = tostring(getgenv().DarkhubGame) end end)
 
 local Lib = {accent = Color3.fromRGB(225,45,65)}
 local C = {bg=Color3.fromRGB(25,25,30), side=Color3.fromRGB(20,20,24), card=Color3.fromRGB(32,32,38), hover=Color3.fromRGB(40,40,48),
@@ -83,8 +88,9 @@ local logo = new("ImageLabel", {Parent=logoTile, Size=UDim2.fromScale(1,1), Imag
 logoTile.MouseEnter:Connect(function() tw(logoTile.UIScale, {Scale=1.08}, .3, Enum.EasingStyle.Back) end)
 onLeave(logoTile, function() tw(logoTile.UIScale, {Scale=1}, .3) end)
 text("Darkhub", 17, C.text, W.Bold, {Parent=side, Position=UDim2.fromOffset(66,15), Size=UDim2.new(1,-76,0,20)})
-local subtitle = text("Arsenal", 14, C.dim, W.Medium, {Parent=side, Position=UDim2.fromOffset(66,36), Size=UDim2.new(1,-76,0,14), TextScaled=true})
+local subtitle = text(GAME_NAME, 14, C.dim, W.Medium, {Parent=side, Position=UDim2.fromOffset(66,36), Size=UDim2.new(1,-76,0,14), TextScaled=true})
 new("UITextSizeConstraint", {Parent=subtitle, MaxTextSize=11, MinTextSize=8})
+function Lib.setSubtitle(s) subtitle.Text = tostring(s) end
 
 local search = new("Frame", {Parent=side, Position=UDim2.fromOffset(12,70), Size=UDim2.new(1,-24,0,34), BackgroundColor3=C.card}, corner(8), stroke())
 text("🔍", 11, C.dim, nil, {Parent=search, Position=UDim2.fromOffset(10,0), Size=UDim2.fromOffset(14,34)})
@@ -492,10 +498,10 @@ function Lib.addButton(tab, name, desc, kind, cb, o)
 			AutoButtonColor=false, Text=name, TextSize=13, TextColor3=C.text, FontFace=Font.new(FAM, W.Medium)}, corner(7), stroke(), new("UIScale", {}))
 		if desc then text(desc, 12, C.dim, nil, {Parent=getExtra(), Size=UDim2.new(1,0,0,0), AutomaticSize=AY, TextWrapped=true, TextXAlignment=Enum.TextXAlignment.Center}) end
 		b.MouseEnter:Connect(function() tw(b, {BackgroundColor3=C.hover}, .15) tw(b.S, {Color=C.line:Lerp(Lib.accent,.5)}, .15) end)
-		onLeave(b, function() 
-			tw(b, {BackgroundColor3=C.elem}, .15) 
-			tw(b.S, {Color=C.line}, .15) 
-			if b:FindFirstChildOfClass("UIScale") then tw(b.UIScale, {Scale=1}, .2) end 
+		onLeave(b, function()
+			tw(b, {BackgroundColor3=C.elem}, .15)
+			tw(b.S, {Color=C.line}, .15)
+			if b:FindFirstChildOfClass("UIScale") then tw(b.UIScale, {Scale=1}, .2) end
 		end)
 		b.MouseButton1Down:Connect(function() tw(b.UIScale, {Scale=.97}, .1) end)
 		b.MouseButton1Up:Connect(function() tw(b.UIScale, {Scale=1}, .35, Enum.EasingStyle.Back) end)
@@ -1024,7 +1030,7 @@ fabState()
 
  addButton returns a control:  ctl.value  (current value)  |  ctl.Set(x)  (change it from code)
  Extras:  notify(title, message, seconds)  |  setTheme("Evergreen")  |  UI.setAccent(Color3)  |  UI.setShown(true/false)
-          UI.setSnow(true/false)  |  UI.setLights(true/false)  |  UI.themeNames (sorted list of all themes)
+          UI.setSnow(true/false)  |  UI.setSubtitle("Game Name")  |  UI.themeNames (sorted list of all themes)
 
  PRESETS (every Toggle/Slider/Input/Dropdown/Dropbox/Keybind/Color is saved by tab + name):
    savePreset("Legit")     saves everything now           loadPreset("Legit")   applies it
@@ -1040,6 +1046,4 @@ fabState()
    Classic - Crimson, Ocean, Violet, Mint, Sunset, Cyber, Rose, Lime, Amber, Grape, Bubblegum, Toxic
  Left Ctrl shows or hides the menu.  "/" jumps to the tab search.
 ================================================================= ]]
-local UI = Lib
-local addTab, addSection, addButton, notify, setTheme = UI.addTab, UI.addSection, UI.addButton, UI.notify, UI.setTheme
-local savePreset, loadPreset, deletePreset, listPresets = UI.savePreset, UI.loadPreset, UI.deletePreset, UI.listPresets
+return Lib
