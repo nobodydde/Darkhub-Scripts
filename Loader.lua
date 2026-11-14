@@ -4,7 +4,7 @@
 -- Optional settings. Set any of these BEFORE the loadstring line:
 --   getgenv().DarkhubGame         = "Arsenal"                    -- sidebar subtitle
 --   getgenv().DarkhubKeybind      = Enum.KeyCode.RightShift      -- open/close key (a name works too: "RightShift")
---   getgenv().DarkhubTheme        = "Ocean"                      -- starting theme (any name in UI.themeNames)
+--   getgenv().DarkhubTheme        = "Darkhub Red"                      -- starting theme (any name in UI.themeNames)
 --   getgenv().DarkhubAccent       = Color3.fromRGB(46,125,255)   -- or an exact starting color
 --   getgenv().DarkhubResetPresets = true                         -- wipe every saved preset when the script runs
 local Players, TS, UIS, RS, HS = game:GetService("Players"), game:GetService("TweenService"), game:GetService("UserInputService"), game:GetService("RunService"), game:GetService("HttpService")
@@ -57,61 +57,27 @@ end
 ---------------- themes
 local DEFAULT_ACCENT = Color3.fromRGB(46,125,255)
 local THEMES = {
-	["Darkhub Blue"]    = DEFAULT_ACCENT,
-	-- Christmas
-	["Candy Cane"]      = Color3.fromRGB(225,45,65),
-	["Holly Berry"]     = Color3.fromRGB(190,25,50),
-	["Evergreen"]       = Color3.fromRGB(45,170,95),
-	["Mistletoe"]       = Color3.fromRGB(130,205,95),
-	["Snowfall"]        = Color3.fromRGB(185,220,255),
-	["Frostbite"]       = Color3.fromRGB(80,175,255),
-	["Golden Star"]     = Color3.fromRGB(255,200,60),
-	["Gingerbread"]     = Color3.fromRGB(205,130,70),
-	["Hot Cocoa"]       = Color3.fromRGB(165,105,70),
-	["Reindeer"]        = Color3.fromRGB(180,120,80),
-	["Sugar Plum"]      = Color3.fromRGB(185,95,225),
-	["Northern Lights"] = Color3.fromRGB(80,230,190),
-	["Tinsel"]          = Color3.fromRGB(210,215,230),
-	["Rudolph"]         = Color3.fromRGB(255,60,40),
-	["Eggnog"]          = Color3.fromRGB(240,215,150),
-	["Winter Night"]    = Color3.fromRGB(100,110,255),
-	["Peppermint"]      = Color3.fromRGB(255,90,110),
-	["Cranberry"]       = Color3.fromRGB(160,20,55),
-	["Krampus"]         = Color3.fromRGB(130,15,25),
-	["Frosted Pine"]    = Color3.fromRGB(70,140,110),
-	["Spruce"]          = Color3.fromRGB(30,120,80),
-	["Wreath"]          = Color3.fromRGB(60,150,70),
-	["Elf"]             = Color3.fromRGB(110,200,60),
-	["Ice Queen"]       = Color3.fromRGB(150,210,255),
-	["Glacier"]         = Color3.fromRGB(110,200,230),
-	["Icicle"]          = Color3.fromRGB(200,235,255),
-	["Blizzard"]        = Color3.fromRGB(230,240,255),
-	["Frozen Lake"]     = Color3.fromRGB(60,140,200),
-	["Polar Night"]     = Color3.fromRGB(70,90,200),
-	["Midnight Snow"]   = Color3.fromRGB(120,130,220),
-	["Silver Bells"]    = Color3.fromRGB(190,195,210),
-	["Ornament Gold"]   = Color3.fromRGB(240,180,40),
-	["Starlight"]       = Color3.fromRGB(255,230,120),
-	["Firelight"]       = Color3.fromRGB(255,130,40),
-	["Yule Log"]        = Color3.fromRGB(150,85,45),
-	["Cinnamon"]        = Color3.fromRGB(190,100,55),
-	["Sleigh Ride"]     = Color3.fromRGB(235,55,55),
-	["Snow Angel"]      = Color3.fromRGB(240,225,255),
-	["Aurora Pink"]     = Color3.fromRGB(255,110,190),
-	["Christmas Eve"]   = Color3.fromRGB(90,60,200),
-	-- Classic
-	["Crimson"]         = Color3.fromRGB(220,20,60),
-	["Ocean"]           = Color3.fromRGB(0,140,220),
-	["Violet"]          = Color3.fromRGB(140,80,255),
-	["Mint"]            = Color3.fromRGB(80,230,160),
-	["Sunset"]          = Color3.fromRGB(255,110,70),
-	["Cyber"]           = Color3.fromRGB(0,255,200),
-	["Rose"]            = Color3.fromRGB(255,80,140),
-	["Lime"]            = Color3.fromRGB(170,255,60),
-	["Amber"]           = Color3.fromRGB(255,170,0),
-	["Grape"]           = Color3.fromRGB(120,50,200),
-	["Bubblegum"]       = Color3.fromRGB(255,150,220),
-	["Toxic"]           = Color3.fromRGB(120,255,0),
+	["Darkhub Blue"]     = DEFAULT_ACCENT,
+	["Darkhub Red"]      = Color3.fromRGB(235,55,70),
+	["Darkhub Purple"]   = Color3.fromRGB(145,90,255),
+	["Darkhub Pink"]     = Color3.fromRGB(255,85,170),
+	["Darkhub Rose"]     = Color3.fromRGB(255,95,125),
+	["Darkhub Orange"]   = Color3.fromRGB(255,130,45),
+	["Darkhub Gold"]     = Color3.fromRGB(245,190,50),
+	["Darkhub Yellow"]   = Color3.fromRGB(250,220,70),
+	["Darkhub Lime"]     = Color3.fromRGB(150,230,60),
+	["Darkhub Green"]    = Color3.fromRGB(50,200,110),
+	["Darkhub Mint"]     = Color3.fromRGB(70,225,170),
+	["Darkhub Teal"]     = Color3.fromRGB(30,190,180),
+	["Darkhub Cyan"]     = Color3.fromRGB(40,200,240),
+	["Darkhub Sky"]      = Color3.fromRGB(95,180,255),
+	["Darkhub Indigo"]   = Color3.fromRGB(95,100,255),
+	["Darkhub Violet"]   = Color3.fromRGB(180,100,240),
+	["Darkhub Magenta"]  = Color3.fromRGB(225,70,220),
+	["Darkhub Crimson"]  = Color3.fromRGB(190,25,55),
+	["Darkhub Brown"]    = Color3.fromRGB(190,120,75),
+	["Darkhub Silver"]   = Color3.fromRGB(185,195,215),
+	["Darkhub White"]    = Color3.fromRGB(235,240,250),
 }
 
 local startAccent = DEFAULT_ACCENT
@@ -400,7 +366,7 @@ end
 
 function Lib.setAccent(c) Lib.accent = c for _, p in painters do p(c, false) end end
 
--- Themes: Lib.setTheme("Candy Cane")   |   Lib.themeNames = sorted list of every theme name
+-- Themes: Lib.setTheme("Darkhub Red")   |   Lib.themeNames = sorted list of every theme name
 Lib.themes = THEMES
 Lib.themeNames = {}
 for n in Lib.themes do table.insert(Lib.themeNames, n) end
@@ -1184,7 +1150,7 @@ fabState()
  SETTINGS (optional, put these BEFORE the loadstring line):
    getgenv().DarkhubGame         = "Hood Roleplay Chicago"     sidebar subtitle
    getgenv().DarkhubKeybind      = Enum.KeyCode.RightShift     open/close key  (or "RightShift", "Insert", "MouseButton3"...)
-   getgenv().DarkhubTheme        = "Ocean"                     starting theme   (default: "Darkhub Blue")
+   getgenv().DarkhubTheme        = "Darkhub Red"                     starting theme   (default: "Darkhub Blue")
    getgenv().DarkhubAccent       = Color3.fromRGB(46,125,255)  exact starting color (beats DarkhubTheme)
    getgenv().DarkhubResetPresets = true                        wipe every saved preset each time it runs
 
@@ -1215,7 +1181,7 @@ fabState()
                             nosave = true  (leave this control out of presets)
 
  addButton returns a control:  ctl.value  (current value)  |  ctl.Set(x)  (change it from code)
- Extras:  notify(title, message, seconds)  |  setTheme("Evergreen")  |  UI.setAccent(Color3)  |  UI.setShown(true/false)
+ Extras:  notify(title, message, seconds)  |  setTheme("Darkhub Red")  |  UI.setAccent(Color3)  |  UI.setShown(true/false)
           UI.setSnow(true/false)  |  UI.setSubtitle("Game Name")  |  UI.themeNames (sorted list of all themes)
           UI.setToggleKey(Enum.KeyCode.RightShift)  |  UI.getToggleKey()
 
@@ -1227,13 +1193,9 @@ fabState()
    The last preset you SAVED or LOADED loads by itself next time the script runs.
    v2 wipes old (v1) presets once, the first time it runs.
 
- Themes (53): Darkhub Blue (default)
-   Christmas - Candy Cane, Holly Berry, Evergreen, Mistletoe, Snowfall, Frostbite, Golden Star,
-   Gingerbread, Hot Cocoa, Reindeer, Sugar Plum, Northern Lights, Tinsel, Rudolph, Eggnog, Winter Night,
-   Peppermint, Cranberry, Krampus, Frosted Pine, Spruce, Wreath, Elf, Ice Queen, Glacier, Icicle, Blizzard,
-   Frozen Lake, Polar Night, Midnight Snow, Silver Bells, Ornament Gold, Starlight, Firelight, Yule Log,
-   Cinnamon, Sleigh Ride, Snow Angel, Aurora Pink, Christmas Eve
-   Classic - Crimson, Ocean, Violet, Mint, Sunset, Cyber, Rose, Lime, Amber, Grape, Bubblegum, Toxic
+ Themes (21): Darkhub Blue (default), Darkhub Red, Darkhub Purple, Darkhub Pink, Darkhub Rose, Darkhub Orange,
+   Darkhub Gold, Darkhub Yellow, Darkhub Lime, Darkhub Green, Darkhub Mint, Darkhub Teal, Darkhub Cyan, Darkhub Sky,
+   Darkhub Indigo, Darkhub Violet, Darkhub Magenta, Darkhub Crimson, Darkhub Brown, Darkhub Silver, Darkhub White
  Left Ctrl (or your DarkhubKeybind) shows or hides the menu.  "/" jumps to the tab search.
 ================================================================= ]]
 return Lib
