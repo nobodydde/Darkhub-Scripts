@@ -147,6 +147,45 @@ local function isMove(i) return i.UserInputType == Enum.UserInputType.MouseMovem
 local leaves = {} -- every "mouse left" effect, so touch screens can clear stuck highlights
 local function onLeave(o, f) o.MouseLeave:Connect(f) table.insert(leaves, {o, f}) end
 local fadeEdges = NumberSequence.new({NumberSequenceKeypoint.new(0,1), NumberSequenceKeypoint.new(.5,0), NumberSequenceKeypoint.new(1,1)})
+-- theme logos: the swirl recolored for every theme. A custom accent color uses the closest one.
+local LOGO_IDS = {
+	["Darkhub Blue"]     = "rbxassetid://88022401621783",
+	["Darkhub Red"]      = "rbxassetid://126488767889957",
+	["Darkhub Purple"]   = "rbxassetid://116556846774406",
+	["Darkhub Pink"]     = "rbxassetid://76974246617829",
+	["Darkhub Rose"]     = "rbxassetid://108154237461406",
+	["Darkhub Orange"]   = "rbxassetid://90170526520348",
+	["Darkhub Gold"]     = "rbxassetid://115251976456907",
+	["Darkhub Yellow"]   = "rbxassetid://90077256437642",
+	["Darkhub Lime"]     = "rbxassetid://78108287151774",
+	["Darkhub Green"]    = "rbxassetid://136888995344546",
+	["Darkhub Mint"]     = "rbxassetid://119680775223298",
+	["Darkhub Teal"]     = "rbxassetid://128459876058630",
+	["Darkhub Cyan"]     = "rbxassetid://95027884641816",
+	["Darkhub Sky"]      = "rbxassetid://97988060540899",
+	["Darkhub Indigo"]   = "rbxassetid://104804435127923",
+	["Darkhub Violet"]   = "rbxassetid://132682631079793",
+	["Darkhub Magenta"]  = "rbxassetid://103974805044045",
+	["Darkhub Crimson"]  = "rbxassetid://125280890066582",
+	["Darkhub Brown"]    = "rbxassetid://77738904072442",
+	["Darkhub Silver"]   = "rbxassetid://83054095884776",
+	["Darkhub White"]    = "rbxassetid://82261329980293",
+}
+local FALLBACK_LOGO = "rbxassetid://129745620825874"
+local logoImages, currentLogo = {}, nil
+local function nearestLogo(c)
+	local best, bd = nil, math.huge
+	for n, col in THEMES do
+		local id = LOGO_IDS[n]
+		if id and not id:find("LOGO_") then
+			local d = (col.R-c.R)^2 + (col.G-c.G)^2 + (col.B-c.B)^2
+			if d < bd then best, bd = id, d end
+		end
+	end
+	return best or FALLBACK_LOGO
+end
+local function logoImage(img) table.insert(logoImages, img) img.Image = currentLogo or nearestLogo(Lib.accent) return img end
+paint(function(c) currentLogo = nearestLogo(c) for _, i in logoImages do i.Image = currentLogo end end)
 local function isImage(s) return type(s) == "string" and (s:find("^rbxasset") ~= nil or s:find("^rbxthumb") ~= nil or s:find("^http") ~= nil) end
 
 -- tiny vector icons drawn from frames (no image uploads needed, crisp at every scale)
@@ -239,7 +278,7 @@ local logoGlow = accent(new("Frame", {Parent=side, AnchorPoint=Vector2.new(.5,.5
 local logoTile = new("Frame", {Parent=side, Position=UDim2.fromOffset(LX,LY), Size=UDim2.fromOffset(LOGO,LOGO), BackgroundColor3=Color3.new(1,1,1), ClipsDescendants=true},
 	corner(11), grad(C.elem:Lerp(Color3.new(1,1,1),.05), C.side), new("UIScale", {}))
 accent(new("UIStroke", {Parent=logoTile, Thickness=1.2, Transparency=.35, ApplyStrokeMode=Enum.ApplyStrokeMode.Border}), "Color")
-new("ImageLabel", {Parent=logoTile, Size=UDim2.fromScale(1,1), Image="rbxassetid://129745620825874", BackgroundTransparency=1, ScaleType=Enum.ScaleType.Crop}, corner(11))
+logoImage(new("ImageLabel", {Parent=logoTile, AnchorPoint=Vector2.new(.5,.5), Position=UDim2.fromScale(.5,.5), Size=UDim2.fromScale(.84,.84), BackgroundTransparency=1, ScaleType=Enum.ScaleType.Fit}))
 logoTile.MouseEnter:Connect(function() tw(logoTile.UIScale, {Scale=1.08}, .3, Enum.EasingStyle.Back) end)
 onLeave(logoTile, function() tw(logoTile.UIScale, {Scale=1}, .3) end)
 local titleL = text("Darkhub", 16, C.text, W.Bold, {Parent=side, Position=UDim2.fromOffset(66,18), Size=UDim2.new(1,-78,0,18)})
@@ -350,7 +389,7 @@ function Lib.notify(title, msg, time)
 		corner(10), stroke(), grad(C.card:Lerp(Lib.accent,.12), C.card, 0))
 	local badge = new("Frame", {Parent=f, AnchorPoint=Vector2.new(0,.5), Position=UDim2.new(0,12,.5,-1), Size=UDim2.fromOffset(32,32), BackgroundColor3=C.elem, ClipsDescendants=true},
 		corner(8), new("UIStroke", {Color=Lib.accent, Transparency=.4, Thickness=1.2}))
-	new("ImageLabel", {Parent=badge, Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Image="rbxassetid://129745620825874", ScaleType=Enum.ScaleType.Crop}, corner(8))
+	new("ImageLabel", {Parent=badge, AnchorPoint=Vector2.new(.5,.5), Position=UDim2.fromScale(.5,.5), Size=UDim2.fromScale(.8,.8), BackgroundTransparency=1, ScaleType=Enum.ScaleType.Fit, Image=currentLogo or FALLBACK_LOGO})
 	text(tostring(title), 13, C.text, W.Bold, {Parent=f, Position=UDim2.fromOffset(54,12), Size=UDim2.new(1,-64,0,16), TextTruncate=Enum.TextTruncate.AtEnd})
 	text(tostring(msg or ""), 11, C.sub, W.Medium, {Parent=f, Position=UDim2.fromOffset(54,30), Size=UDim2.new(1,-64,0,14), TextTruncate=Enum.TextTruncate.AtEnd})
 	local timer = new("Frame", {Parent=f, Position=UDim2.new(0,12,1,-4), Size=UDim2.new(1,-24,0,2), BackgroundColor3=Lib.accent, BorderSizePixel=0}, corner(1))
@@ -1083,8 +1122,9 @@ end
 local fabGlow = accent(new("Frame", {Parent=gui, AnchorPoint=Vector2.new(.5,.5), Position=UDim2.new(0,46,.5,0), Size=UDim2.fromOffset(64,64),
 	BackgroundTransparency=.82, Visible=touch, ZIndex=9}, corner(32)), "BackgroundColor3")
 local fab = new("ImageButton", {Parent=gui, Name="MobileToggle", AnchorPoint=Vector2.new(.5,.5), Position=UDim2.new(0,46,.5,0), Size=UDim2.fromOffset(52,52),
-	BackgroundColor3=C.card, Image="rbxassetid://129745620825874", ScaleType=Enum.ScaleType.Crop, AutoButtonColor=false, Visible=touch, ZIndex=10},
+	BackgroundColor3=C.card, ScaleType=Enum.ScaleType.Fit, AutoButtonColor=false, Visible=touch, ZIndex=10},
 	corner(26), new("UIScale", {}))
+logoImage(fab)
 local fabRing = accent(new("UIStroke", {Parent=fab, Thickness=2, ApplyStrokeMode=Enum.ApplyStrokeMode.Border}), "Color")
 
 local function fabState()
