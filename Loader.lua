@@ -14,7 +14,13 @@ if old then old:Destroy() end
 local gui = Instance.new("ScreenGui")
 gui.Name, gui.ResetOnSpawn, gui.IgnoreGuiInset, gui.DisplayOrder = "Darkhub", false, true, 50
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-gui.Parent = plr.PlayerGui
+pcall(function()
+	if gethui then
+		gui.Parent = gethui()
+	else
+		gui.Parent = plr.PlayerGui
+	end
+end)
 
 -- every global connection is tracked, so re-running the script never leaves old keybinds firing
 local conns = {}
@@ -374,6 +380,11 @@ local function topBtn(kind, x, hoverCol)
 end
 local closeBtn, minBtn = topBtn("close", -14, Color3.fromRGB(220,60,70)), topBtn("min", -46, C.hover)
 local pages = new("Frame", {Parent=content, Position=UDim2.fromOffset(0,TOP_H), Size=UDim2.new(1,-4,1,-(TOP_H+6)), BackgroundTransparency=1, ClipsDescendants=true})
+-- floating popups (color picker). Clicking anywhere else in the window closes the open one.
+local popLayer = new("Frame", {Parent=main, Name="Popups", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, ZIndex=20})
+local popCatch = new("TextButton", {Parent=popLayer, Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Text="", Visible=false, ZIndex=20})
+local closePopup
+popCatch.MouseButton1Click:Connect(function() if closePopup then closePopup() end end)
 function Lib.setSnow(v) snow.Visible = v end
 
 ---------------- notifications (slide in from the right, with a timer bar)
@@ -529,6 +540,7 @@ end
 ---------------- tabs
 local function select(name)
 	if current == name then return end
+	if closePopup then closePopup() end
 	current = name
 	for n, t in tabs do
 		local on = n == name
@@ -962,19 +974,112 @@ function Lib.addButton(tab, name, desc, kind, cb, o)
 		end)
 
 	elseif kind == "color" then
+		-- swatch on the right; clicking it opens a floating picker (saturation/brightness square, hue bar, hex box)
 		api.value = o.default or Lib.accent
 		local sw = right("TextButton", 42, 24, {BackgroundColor3=api.value}, 7)
 		sw.S.Transparency = .5
 		local sc = new("UIScale", {Parent=sw})
-		new("UIGradient", {Parent=sw, Rotation=90, Color=ColorSequence.new(Color3.new(1,1,1), Color3.fromRGB(205,205,205))})
-		function api.Set(c) api.value = c tw(sw, {BackgroundColor3=c}, .3) fire(c) end
-		local function shift()
-			sc.Scale = .8 tw(sc, {Scale=1}, .4, Enum.EasingStyle.Back)
-			local hh, s, v = api.value:ToHSV()
-			api.Set(Color3.fromHSV((hh + .08) % 1, math.max(s, .6), math.max(v, .85)))
+		new("UIGradient", {Parent=sw, Rotation=90, Color=ColorSequence.new(Color3.new(1,1,1), Color3.fromRGB(215,215,215))})
+		local H, S, V = api.value:ToHSV()
+		local POP_W, SV_H = 236, touch and 160 or 148
+		local POP_H = 12 + 20 + 10 + SV_H + 10 + 18 + 12
+		local pop, svBox, svKnob, hueBar, hueKnob, dotC, hexBox
+		local function refresh()
+			local c = Color3.fromHSV(H, S, V)
+			api.value = c
+			sw.BackgroundColor3 = c
+			if pop then
+				svBox.BackgroundColor3 = Color3.fromHSV(H, 1, 1)
+				svKnob.Position = UDim2.fromScale(S, 1 - V)
+				hueKnob.Position = UDim2.fromScale(.5, H)
+				dotC.BackgroundColor3 = c
+				if not hexBox:IsFocused() then hexBox.Text = "#"..c:ToHex():upper() end
+			end
 		end
-		sw.MouseButton1Click:Connect(shift) head.MouseButton1Click:Connect(shift)
-
+		local mode -- "sv" / "hue" while dragging
+		local function dragTo(pos)
+			local y = pos.Y -- same space as AbsolutePosition (IgnoreGuiInset is on)
+			if mode == "sv" then
+				local ap, as = svBox.AbsolutePosition, svBox.AbsoluteSize
+				S = math.clamp((pos.X - ap.X) / as.X, 0, 1)
+				V = 1 - math.clamp((y - ap.Y) / as.Y, 0, 1)
+			else
+				local ap, as = hueBar.AbsolutePosition, hueBar.AbsoluteSize
+				H = math.clamp((y - ap.Y) / as.Y, 0, .999)
+			end
+			refresh() fire(api.value)
+		end
+		local function build()
+			pop = new("Frame", {Parent=popLayer, Visible=false, Size=UDim2.fromOffset(POP_W, POP_H), BackgroundColor3=C.side, ZIndex=22},
+				corner(12), stroke(), pad(12,12), new("UIScale", {}))
+			dotC = new("Frame", {Parent=pop, Position=UDim2.fromOffset(0,2), Size=UDim2.fromOffset(16,16), BackgroundColor3=api.value, ZIndex=23}, corner(8),
+				new("UIStroke", {Color=Color3.new(1,1,1), Transparency=.75}))
+			text("Color selection", 13, C.text, W.Bold, {Parent=pop, Position=UDim2.fromOffset(26,0), Size=UDim2.new(1,-26,0,20), ZIndex=23})
+			svBox = new("TextButton", {Parent=pop, Position=UDim2.fromOffset(0,30), Size=UDim2.new(1,-26,0,SV_H), Text="", AutoButtonColor=false, ZIndex=23}, corner(6))
+			new("Frame", {Parent=svBox, Size=UDim2.fromScale(1,1), BackgroundColor3=Color3.new(1,1,1), ZIndex=23}, corner(6),
+				new("UIGradient", {Transparency=NumberSequence.new(0,1)}))
+			new("Frame", {Parent=svBox, Size=UDim2.fromScale(1,1), BackgroundColor3=Color3.new(), ZIndex=24}, corner(6),
+				new("UIGradient", {Rotation=90, Transparency=NumberSequence.new(1,0)}))
+			svKnob = new("Frame", {Parent=svBox, AnchorPoint=Vector2.new(.5,.5), Size=UDim2.fromOffset(14,14), BackgroundTransparency=1, ZIndex=25}, corner(7),
+				new("UIStroke", {Color=Color3.new(1,1,1), Thickness=2}))
+			local rainbow = {}
+			for i = 0, 6 do table.insert(rainbow, ColorSequenceKeypoint.new(i/6, Color3.fromHSV((i/6) % 1, 1, 1))) end
+			hueBar = new("TextButton", {Parent=pop, AnchorPoint=Vector2.new(1,0), Position=UDim2.new(1,0,0,30), Size=UDim2.fromOffset(14, SV_H), Text="",
+				AutoButtonColor=false, BackgroundColor3=Color3.new(1,1,1), ZIndex=23}, corner(7), new("UIGradient", {Rotation=90, Color=ColorSequence.new(rainbow)}))
+			hueKnob = new("Frame", {Parent=hueBar, AnchorPoint=Vector2.new(.5,.5), Size=UDim2.new(1,6,0,6), BackgroundColor3=Color3.new(1,1,1), ZIndex=25}, corner(3),
+				new("UIStroke", {Color=Color3.fromRGB(40,40,50), Transparency=.3}))
+			hexBox = new("TextBox", {Parent=pop, AnchorPoint=Vector2.new(0,1), Position=UDim2.new(0,0,1,0), Size=UDim2.new(1,0,0,18), BackgroundTransparency=1, Text="",
+				TextColor3=C.sub, TextSize=12, FontFace=Font.new(FAM, W.Medium), TextXAlignment=Enum.TextXAlignment.Left, ClearTextOnFocus=false, ZIndex=23})
+			hexBox.FocusLost:Connect(function()
+				local hx = hexBox.Text:gsub("[#%s]", "")
+				if #hx == 6 and hx:match("^%x+$") then api.Set(Color3.fromHex(hx)) else refresh() end
+			end)
+			for _, b in {svBox, hueBar} do
+				b.InputBegan:Connect(function(i)
+					if isPress(i) then mode = b == svBox and "sv" or "hue" t.page.ScrollingEnabled = false dragTo(i.Position) end
+				end)
+			end
+			on(UIS.InputChanged, function(i) if mode and isMove(i) then dragTo(i.Position) end end)
+			on(UIS.InputEnded, function(i) if mode and isPress(i) then mode = nil t.page.ScrollingEnabled = true end end)
+			refresh()
+		end
+		local closeMe
+		function closeMe()
+			if pop then pop.Visible = false end
+			popCatch.Visible = false
+			tw(sw.S, {Color=C.line, Transparency=.5}, .2)
+			if closePopup == closeMe then closePopup = nil end
+		end
+		local function openMe()
+			if closePopup then closePopup() end
+			if not pop then build() end
+			-- place it under the swatch (or above it if there's no room), kept inside the window
+			local k = scale.Scale
+			local rel = (sw.AbsolutePosition - main.AbsolutePosition) / k
+			local size = sw.AbsoluteSize / k
+			local mainSize = main.AbsoluteSize / k
+			local x = math.clamp(rel.X + size.X - POP_W, 8, math.max(8, mainSize.X - POP_W - 8))
+			local y = rel.Y + size.Y + 8
+			if y + POP_H > mainSize.Y - 8 then y = math.max(8, rel.Y - POP_H - 8) end
+			pop.Position = UDim2.fromOffset(x, y)
+			refresh()
+			popCatch.Visible, pop.Visible = true, true
+			pop.UIScale.Scale = .92 tw(pop.UIScale, {Scale=1}, .3, Enum.EasingStyle.Back)
+			tw(sw.S, {Color=Lib.accent, Transparency=0}, .2)
+			closePopup = closeMe
+		end
+		local function flip()
+			sc.Scale = .85 tw(sc, {Scale=1}, .35, Enum.EasingStyle.Back)
+			if pop and pop.Visible then closeMe() else openMe() end
+		end
+		function api.Set(c)
+			api.value = c
+			local h2, s2, v2 = c:ToHSV()
+			if s2 > 0 and v2 > 0 then H = h2 end -- keep the hue for greys/black
+			S, V = s2, v2
+			refresh() fire(c)
+		end
+		sw.MouseButton1Click:Connect(flip) head.MouseButton1Click:Connect(flip)
 	elseif kind == "label" then
 		title.TextColor3, title.TextSize, title.TextWrapped = C.sub, 12, true
 		title.TextTruncate = Enum.TextTruncate.None
@@ -1014,6 +1119,7 @@ function Lib.setShown(v)
 	end
 end
 local function hide()
+	if closePopup then closePopup() end
 	Lib.setShown(false)
 	Lib.notify("Darkhub hidden", touch and "Tap the Darkhub button to reopen" or ("Press "..keyName(toggleKey).." to reopen"))
 end
@@ -1214,7 +1320,7 @@ fabState()
                                         format = function(v) return "label" end, includeSelf = false}
                 Dropbox control also has:  ctl.Refresh(newOptions)  |  ctl.Clear()
    "Keybind"    nothing (runs on key)  {default = Enum.KeyCode.F}
-   "Color"      Color3                 {default = Color3.new(1,0,0)}
+   "Color"      Color3 (live as you drag) {default = Color3.new(1,0,0)}  - click the swatch for the picker
    "Label"      (just small text)      -
    Any type can also take:  order = 5  (position inside its section)
                             section = "Movement", side = "Right"  (put it in that section)
